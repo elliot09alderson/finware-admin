@@ -41,7 +41,7 @@ export const AdminLogin = async (req, res, next) => {
       }
     } else {
       if (email) {
-        const admin = await AdminModel.findOne({ email });
+        const admin = await FindAdmin("", email);
         const isValidated = await ValidatePassword(
           password,
           admin.password,
@@ -61,12 +61,46 @@ export const AdminLogin = async (req, res, next) => {
         );
 
         await AdminModel.updateOne({ _id: admin._id }, { otp: otp });
-        responseReturn(res, 201, { message: "otp sent to your mail" });
+        res.json({ message: "otp sent to your mail" });
       } else {
-        responseReturn(res, 400, { error: "Wrong Credentials..." });
+        res.json({ error: "Wrong Credentials..." });
       }
 
       // send token
     }
+  } else {
+    res.json({ message: "Email not found" });
+  }
+};
+
+//admin otp verify
+verify_admin_otp = async function (req, res, next) {
+  try {
+    const { email, otp } = req.body;
+    console.log(email, otp);
+    const adminData = await FindAdmin("", email);
+
+    if (Number(adminData.otp) === otp) {
+      const token = await createToken({
+        _id: adminData._id,
+        role: adminData.role,
+        
+      });
+      res.cookie("adminToken", token, {
+        expires: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      });
+      await AdminModel.findByIdAndUpdate({ _id: adminData._id }, { otp: null });
+      const signature = generateSignature({
+        _id: existingVendor._id,
+        email: existingVendor.email,
+        foodTypes: existingVendor.foodTypes,
+        name: existingVendor.name,
+      });
+      return res.json(signature);
+    } else {
+      responseReturn(res, 401, { error: "Invalid OTP" });
+    }
+  } catch (err) {
+    responseReturn(res, 500, { error: "Internal server error " });
   }
 };
