@@ -1,5 +1,8 @@
+import { validateSignature } from "../utils/passwordUtility";
+
 export const Authenticate = async (req, res, next) => {
   const validate = await validateSignature(req);
+
   if (validate) {
     next();
   } else {

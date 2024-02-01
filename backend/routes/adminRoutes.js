@@ -7,6 +7,7 @@ import {
 } from "../controllers";
 
 AdminRouter.post("/create", CreateAdmin);
+
 AdminRouter.post("/employee", CreateAdminEmployee);
 AdminRouter.post("/login", AdminLogin);
 AdminRouter.get("/verify/otp", verify_admin_otp);

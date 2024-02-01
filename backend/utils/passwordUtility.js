@@ -6,13 +6,13 @@ export const GenSalt = async () => {
   return await bcrypt.genSalt();
 };
 
-export const GenEncpass = async (pass, salt) => {
+export const GenEncPass = async (pass, salt) => {
   return await bcrypt.hash(pass, salt);
 };
 
 export const ValidatePassword = async (enteredPassword, EncPassword, salt) => {
   //comparing both pass
-  return (await GenEncpass(enteredPassword, salt)) === EncPassword;
+  return (await GenEncPass(enteredPassword, salt)) === EncPassword;
 };
 
 //validate Signature
@@ -24,4 +24,8 @@ export const validateSignature = async (req) => {
     return true;
   }
   return false;
+};
+
+export const generateSignature = (payload) => {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "1d" });
 };

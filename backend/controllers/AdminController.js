@@ -1,3 +1,4 @@
+import sendEmail from "../utils";
 import { AdminModel } from "../models/AdminSchema";
 import { ValidatePassword } from "../utils/passwordUtility";
 
@@ -18,7 +19,7 @@ export const CreateAdmin = async (req, res, next) => {
       message: "Admin Already Exist",
     });
   }
-  const admin = AdminModel.create({ email, password, username, phone });
+  const admin = AdminModel.create({ email, password, username, phone, salt });
   res.json({
     admin,
   });
@@ -61,6 +62,7 @@ export const AdminLogin = async (req, res, next) => {
         );
 
         await AdminModel.updateOne({ _id: admin._id }, { otp: otp });
+
         res.json({ message: "otp sent to your mail" });
       } else {
         res.json({ error: "Wrong Credentials..." });
@@ -84,19 +86,16 @@ verify_admin_otp = async function (req, res, next) {
       const token = await createToken({
         _id: adminData._id,
         role: adminData.role,
-        
       });
-      res.cookie("adminToken", token, {
-        expires: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-      });
+
       await AdminModel.findByIdAndUpdate({ _id: adminData._id }, { otp: null });
       const signature = generateSignature({
-        _id: existingVendor._id,
-        email: existingVendor.email,
-        foodTypes: existingVendor.foodTypes,
-        name: existingVendor.name,
+        _id: adminData._id,
+        email: adminData.email,
+        role: adminData.role,
       });
-      return res.json(signature);
+
+      res.cookie("adminToken", signature, { maxAge: 3600000, httpOnly: true });
     } else {
       responseReturn(res, 401, { error: "Invalid OTP" });
     }
